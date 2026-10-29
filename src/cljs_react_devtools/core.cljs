@@ -68,10 +68,11 @@
          (.-uix-component? el-type))))
 
 (defn memo-node? [node]
-  (let [el-type (.-elementType node)]
-    (and el-type
-         (= js/Object (.-constructor el-type))
-         (= (aget el-type "$$typeof") (.for js/Symbol "react.memo")))))
+  (when node
+    (let [el-type (.-elementType node)]
+      (and el-type
+           (= js/Object (.-constructor el-type))
+           (= (aget el-type "$$typeof") (.for js/Symbol "react.memo"))))))
 
 (defn demunge-name [name]
   (let [s (str/split (demunge-str name) #"\.")]
@@ -168,13 +169,15 @@
 (defui tree-view [{:keys [^js node state set-state]}]
   (let [memo? (memo-node? node)
         node (if memo? (fiber->child node) node)
-        el-type (.-elementType node)
+        el-type (when node (.-elementType node))
         [closed? set-closed] (uix/use-state false)
         {:keys [hide-dom? selected]} state
         selected? (= selected node)
         set-preview-node (uix/use-context preview-ctx)
         colors (uix/use-context theme-ctx)]
     (cond
+      (nil? node) nil
+      
       (or (nil? el-type)
           (and (string? el-type) hide-dom?))
       (render-children node state set-state)
@@ -559,7 +562,8 @@
                             ($ data-view {:data (vec (.-deps hook)) :style {:margin 0 :overflow-x :auto}})))
 
                       "use-ref"
-                      ($ data-view {:data (.. hook -current -current) :style {:margin 0 :overflow-x :auto}})
+                      (when-let [data (some-> hook .-current .-current)]
+                        ($ data-view {:data data :style {:margin 0 :overflow-x :auto}}))
 
                       ($ data-view {:data hook :style {:margin 0 :overflow-x :auto}}))))))
            hooks)))))
