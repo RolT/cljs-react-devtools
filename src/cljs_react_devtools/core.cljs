@@ -1073,6 +1073,18 @@
               ([query dynv]
                (let [ret (subscribe query dynv)]
                  (set! (.-__devtools-label ^js ret) (first query))
+                 ret))))))
+  (when (exists? js/re-frame.alpha.subscribe)
+    (let [subscribe js/re-frame.alpha.subscribe]
+      (set! js/re-frame.alpha.subscribe
+            (fn
+              ([query]
+               (let [ret (subscribe query)]
+                 (set! (.-__devtools-label ^js ret) (first query))
+                 ret))
+              ([query dynv]
+               (let [ret (subscribe query dynv)]
+                 (set! (.-__devtools-label ^js ret) (first query))
                  ret)))))))
 
 (defonce opts* (atom nil))
